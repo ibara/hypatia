@@ -1,8 +1,6 @@
 import pygame
 import pkgutil
 
-from . import assets
-
 class Scene(object):
     """ A generic editor scene.
 
@@ -13,6 +11,7 @@ class Scene(object):
     def __init__(self, editor):
         self.editor = editor
         self.surface = pygame.Surface(editor.screen_size)
+        self.started = False
         
     """ Update the scene. Called before blitting to the parent surface.
     """
@@ -24,20 +23,26 @@ class Scene(object):
     def handle_input(self):
         pass
 
+    """ Scene setup. Called after Pygame is initialized.
+    """
+    def startup(self):
+        self.started = True
+
     """ Perform scene shutdown.
     """
-    def shutdown():
+    def shutdown(self):
         pass
 
 class HomeScene(Scene):
     def __init__(self, editor):
         super(HomeScene, self).__init__(editor)
 
-        self.projects_text = assets.title_font.render("Projects", 0, (51, 51, 51))
+    def startup(self):
+        self.projects_text = self.editor.assets.title_font.render(u"Projects", 1, (51, 51, 51))
 
     def update(self):
         self.surface.fill((255, 255, 255))
-        self.surface.blit(assets.logotype_small, (8, 8))
+        self.surface.blit(self.editor.assets.logotype_small, (8, 8))
 
         # blit projects text
         self.surface.blit(self.projects_text, (16, 64))

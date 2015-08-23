@@ -1,15 +1,27 @@
 import pkgutil
 import pygame
-import io
+import tempfile
+import os
 
-# logotype
-__logotype_data = pkgutil.get_data(__name__, "assets/logotype.bin")
-logotype = pygame.image.fromstring(__logotype_data, (724, 124), "RGBA").convert_alpha()
-logotype_small = pygame.transform.smoothscale(logotype, (181, 31)).convert_alpha()
+class Assets(object):
+    items = [
+        'logotype.png',
+        'chivo.ttf',
+        'chivo_bold.ttf',
+    ]
 
-# fonts
-__chivo_data = io.BytesIO(pkgutil.get_data(__name__, "assets/chivo.ttf"))
-__chivo_bold_data = io.BytesIO(pkgutil.get_data(__name__, "assets/chivo_bold.ttf"))
-primary_font = pygame.font.Font(__chivo_data, 12)
-title_font = pygame.font.Font(__chivo_bold_data, 14)
+    def __init__(self):
+        self.files = {}
+        self.tmpdir = tempfile.mkdtemp()
+        for i in self.items:
+            d = pkgutil.get_data(__name__, os.path.join("assets", i))
+            fh = open(os.path.join(self.tmpdir, i), 'wb')
+            fh.write(d)
+            fh.close()
+        
+        self.logotype = pygame.image.load(os.path.join(self.tmpdir, 'logotype.png')).convert_alpha()
+        self.logotype_small = pygame.transform.smoothscale(self.logotype, (181, 31)).convert_alpha()
+
+        self.primary_font = pygame.font.Font(os.path.join(self.tmpdir, 'chivo.ttf'), 12)
+        self.title_font = pygame.font.Font(os.path.join(self.tmpdir, 'chivo_bold.ttf'), 12)
 
