@@ -9,6 +9,7 @@ class Assets(object):
         'logotype.png',
         'chivo.ttf',
         'chivo_bold.ttf',
+        'fontawesome.ttf',
     ]
 
     def __init__(self):
@@ -30,6 +31,7 @@ class Assets(object):
 
         __primary_path = os.path.join(self.tmpdir, 'chivo.ttf')
         __title_path = os.path.join(self.tmpdir, 'chivo_bold.ttf')
+        __fa_path = os.path.join(self.tmpdir, 'fontawesome.ttf')
 
         __fallback_fonts = "dejavusans,bitstreamverasans"
         __fallback = pygame.font.match_font(__fallback_fonts)
@@ -41,6 +43,8 @@ class Assets(object):
         self.title_font_fb = pygame.font.Font(__fallback, self.font_size)
         self.title_font_fb.set_bold(True)
 
+        self.fontawesome = pygame.font.Font(__fa_path, self.font_size)
+
     def font_render(self, type, text, color):
         f = self.primary_font
         fb = self.primary_font_fb
@@ -48,6 +52,10 @@ class Assets(object):
         if type == 'title':
             f = self.title_font
             fb = self.title_font_fb
+
+        if type == 'fa':
+            f = self.fontawesome
+            fb = None
 
         try:
             return f.render(text, True, color)

@@ -1,12 +1,21 @@
+import os
 import pygame
 from pygame.locals import *
 
-from . import scenes
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
+
+from hypatia.editor.scenes.home import HomeScene
+from hypatia.editor.scenes.setpath import SetPathScene
+from hypatia.editor.scenes.projscan import ProjectScanScene
+from hypatia.editor.scenes.about import AboutScene
 from . import assets
 
 
 class Editor(object):
-    def __init__(self, scene=scenes.HomeScene):
+    def __init__(self, configpath=None):
         pygame.init()
 
         self.screen_size = (800, 600)
@@ -15,27 +24,59 @@ class Editor(object):
 
         self.running = True
         self.assets = assets.Assets()
-        self.scene = None
-        self.switch_scene(scene)
+        self.scenelist = []
 
-        # TODO: create a scene that actually scans projects, instead of this
-        # debugging measure
+        self.delay_load = False
+        self.configpath = self.find_config(path=configpath)
+        self.config = configparser.ConfigParser()
+        self.projects = []
 
-        self.projects = [
-            {
-                'name': 'debug',
-                'path': '/home/hypatia-develop/demo'
-            }
-        ]
+        if not self.configpath:
+            self.jump_scene(SetPathScene)
+            self.delay_load = True
+
+        if not self.delay_load:
+            self.load_config()
+            self.jump_scene(ProjectScanScene)
+
+    """ Try to determine config path. If a path is given and it is not None,
+        it will be used, otherwise we will look in the "Hypatia Projects"
+        directory in the user's home directory.
+    """
+    def find_config(self, path=None):
+        if path and os.path.isfile(path):
+            return path
+
+        home = os.path.expanduser("~")
+        if os.path.isdir(os.path.join(home, "Hypatia Projects")):
+            return os.path.join(home, "Hypatia Projects", "config.ini")
+
+    """ Load the config file from the editor config path.
+    """
+    def load_config(self):
+        if not self.configpath:
+            self.configpath = self.find_config()
+
+        self.config.read(self.configpath) 
+        if self.config.get("editor", "projectpath") == ".":
+            self.config.set("editor", "projectpath",
+                            os.path.dirname(self.configpath))
+
+    """ Save the editor config file.
+    """
+    def save_config(self):
+        fh = open(self.config_path, 'w+')
+        self.config.write(fh)
+        fh.close()
 
     """ Update screen with contents of current scene.
     """
     def update(self):
-        if not self.scene.started:
-            self.scene.startup()
+        if not self.scenelist[0].started:
+            self.scenelist[0].startup()
 
-        self.scene.update()
-        self.screen.blit(self.scene.surface, (0, 0))
+        self.scenelist[0].update()
+        self.screen.blit(self.scenelist[0].surface, (0, 0))
         pygame.display.flip()
 
     """ Handle pygame events. Passes events through to scene's handle_event()
@@ -43,8 +84,8 @@ class Editor(object):
     """
     def handle_events(self):
         for event in pygame.event.get():
-            if self.scene:
-                if self.scene.handle_event(event):
+            if len(self.scenelist) >= 1:
+                if self.scenelist[0].handle_event(event):
                     return
 
             if event.type == QUIT:
@@ -52,12 +93,22 @@ class Editor(object):
 
     """ Switch scenes
     """
-    def switch_scene(self, scenecls, *args):
-        if self.scene:
-            self.scene.shutdown()
+    def jump_scene(self, scenecls, *args):
+        if len(self.scenelist) >= 1:
+            self.scenelist[0].shutdown()
 
         s = scenecls(self, *args)
-        self.scene = s
+        self.scenelist = [s]
+
+    def push_scene(self, scenecls, *args):
+        if len(self.scenelist) >= 1:
+            self.scenelist[0].shutdown()
+
+        self.scenelist.insert(0, scenecls(self, *args))
+
+    def pop_scene(self):
+        self.scenelist[0].shutdown()
+        del self.scenelist[0]
 
     """ Editor main loop.
     """
