@@ -59,7 +59,7 @@ class SetPathScene(Scene):
         tpos = ((boxsize[0] / 2) - (t.get_rect().width / 2), 40)
         box.blit(t, tpos)
 
-        yestext = self.editor.assets.font_render(None, "Yes", 
+        yestext = self.editor.assets.font_render(None, "Yes",
                                                  constants.COLOR_DEFAULT)
         yesbtn = pygame.Surface((yestext.get_rect().width + (btnpad[0] * 2),
                                  yestext.get_rect().height + (btnpad[1] * 2)))

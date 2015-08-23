@@ -12,6 +12,8 @@ class AboutScene(Scene):
         self.click_targets = []
 
     def handle_event(self, event):
+        super(AboutScene, self).handle_event(event)
+
         if event.type == pygame.locals.MOUSEMOTION:
             self.mousepos = event.pos
             return True
@@ -25,6 +27,8 @@ class AboutScene(Scene):
         return False
 
     def startup(self):
+        super(AboutScene, self).startup()
+
         # clear click targets as we reinitialize them in here
         self.click_targets = []
 
@@ -57,4 +61,10 @@ class AboutScene(Scene):
         tpos = ((self.editor.screen_size[0] / 2) - (t.get_rect().width / 2),
                 (logo_y + self.editor.assets.logotype.get_rect().height + 20))
         self.surface.blit(t, tpos)
-        
+
+        msg = "Brought to you by Lillian Lemmer and %d other contributors"
+        msg = msg % (len(hypatia.__contributors__) - 1)
+        t = self.editor.assets.font_render(None, msg, constants.COLOR_DEFAULT)
+        tpos = ((self.editor.screen_size[0] / 2) - (t.get_rect().width / 2),
+                (logo_y + self.editor.assets.logotype.get_rect().height + 40))
+        self.surface.blit(t, tpos)

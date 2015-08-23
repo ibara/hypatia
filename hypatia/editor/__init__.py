@@ -7,10 +7,8 @@ try:
 except ImportError:
     import configparser
 
-from hypatia.editor.scenes.home import HomeScene
 from hypatia.editor.scenes.setpath import SetPathScene
 from hypatia.editor.scenes.projscan import ProjectScanScene
-from hypatia.editor.scenes.about import AboutScene
 from . import assets
 
 
@@ -57,7 +55,7 @@ class Editor(object):
         if not self.configpath:
             self.configpath = self.find_config()
 
-        self.config.read(self.configpath) 
+        self.config.read(self.configpath)
         if self.config.get("editor", "projectpath") == ".":
             self.config.set("editor", "projectpath",
                             os.path.dirname(self.configpath))
