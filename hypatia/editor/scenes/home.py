@@ -62,6 +62,10 @@ class HomeScene(Scene):
                 "pos": pos,
             })
 
+    def shutdown(self):
+        super(HomeScene, self).shutdown()
+        self.mousepos = (-1, -1)
+
     def update(self):
         super(HomeScene, self).update()
 

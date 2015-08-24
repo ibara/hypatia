@@ -48,24 +48,31 @@ class ProjectScene(Scene):
 
         # clear click targets as we reinitialize them in here
         self.click_targets = []
+        self.renderables = []
 
-        self.ret = self.editor.assets.font_render('fa', b'\xf0\x60',
-                                                  constants.COLOR_DEFAULT)
-        self.retpos = (8, 8)
-
+        ret = self.editor.assets.font_render('fa', b'\xf0\x60',
+                                             constants.COLOR_DEFAULT)
+        retpos = (8, 8)
         self.click_targets.append({
-            "rect": self.ret.get_rect().move(*self.retpos),
+            "rect": ret.get_rect().move(*retpos),
             "callback": lambda e: self.editor.pop_scene(),
         })
+        self.renderables.append((ret, retpos)) 
 
-        self.nametext = self.editor.assets.font_render('title',
-                                                       self.project_name,
-                                                       constants.COLOR_DEFAULT)
-        self.namepos = (self.ret.get_rect().width + self.retpos[0] + 8, 8)
+        nametext = self.editor.assets.font_render('title',
+                                                  self.project_name,
+                                                  constants.COLOR_DEFAULT)
+        namepos = (ret.get_rect().width + retpos[0] + 8, 8)
+        self.renderables.append((nametext, namepos))
 
-        self.ovtext = self.editor.assets.font_render('title', 'overview',
-                                                     constants.COLOR_INACTIVE)
-        self.ovpos = (self.namepos[0] + self.nametext.get_rect().width + 8, 8)
+        ovtext = self.editor.assets.font_render('title', 'overview',
+                                                constants.COLOR_INACTIVE)
+        ovpos = (namepos[0] + nametext.get_rect().width + 8, 8)
+        self.renderables.append((ovtext, ovpos))
+
+    def shutdown(self):
+        super(ProjectScene, self).shutdown()
+        self.mousepos = (-1, -1)
 
     def update(self):
         super(ProjectScene, self).update()
@@ -86,6 +93,5 @@ class ProjectScene(Scene):
 
             return
 
-        self.surface.blit(self.ret, self.retpos)
-        self.surface.blit(self.nametext, self.namepos)
-        self.surface.blit(self.ovtext, self.ovpos)
+        for i in self.renderables:
+            self.surface.blit(*i)
