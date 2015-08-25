@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pygame
 import pygame.locals
 
@@ -49,6 +50,7 @@ class ProjectScene(Scene):
         # clear click targets as we reinitialize them in here
         self.click_targets = []
         self.renderables = []
+        self.hoverables = []
 
         ret = self.editor.assets.font_render('fa', b'\xf0\x60',
                                              constants.COLOR_DEFAULT)
@@ -69,6 +71,49 @@ class ProjectScene(Scene):
                                                 constants.COLOR_INACTIVE)
         ovpos = (namepos[0] + nametext.get_rect().width + 8, 8)
         self.renderables.append((ovtext, ovpos))
+
+        self.column_size = (self.editor.screen_size[0] / 3,
+                            self.editor.screen_size[1] - ovpos[1] -
+                            ovtext.get_rect().height - 8)
+
+        self.tilesheets_title = self.editor.assets.font_render(
+            "title",
+            "tilesheets",
+            constants.COLOR_DEFAULT
+        )
+        tilesheets_pos = (8, ovpos[1] + ovtext.get_rect().height + 8)
+        self.renderables.append((self.tilesheets_title, tilesheets_pos))
+
+        # create tilesheet clickables
+        for i, v in enumerate(self.project["tilesheets"]):
+            t = self.editor.assets.font_render(None, v,
+                                               constants.COLOR_DEFAULT)
+            tpos = (16, tilesheets_pos[1] + (t.get_rect().height * (i + 1)))
+            self.hoverables.append({
+                "text": v,
+                "pos": tpos,
+                "rect": t.get_rect().move(*tpos)
+            })
+            self.click_targets.append({
+                "rect": t.get_rect().move(*tpos),
+                "callback": lambda e: print(e),
+            })
+
+        self.scenes_title = self.editor.assets.font_render(
+            "title",
+            "scenes",
+            constants.COLOR_DEFAULT
+        )
+        scenes_pos = (self.column_size[0] + 8, tilesheets_pos[1])
+        self.renderables.append((self.scenes_title, scenes_pos))
+
+        self.walkabouts_title = self.editor.assets.font_render(
+            "title",
+            "walkabouts",
+            constants.COLOR_DEFAULT
+        )
+        walkabouts_pos = (8 + self.column_size[0] * 2, tilesheets_pos[1])
+        self.renderables.append((self.walkabouts_title, walkabouts_pos))
 
     def shutdown(self):
         super(ProjectScene, self).shutdown()
@@ -93,5 +138,14 @@ class ProjectScene(Scene):
 
             return
 
+        # blit everything
         for i in self.renderables:
             self.surface.blit(*i)
+
+        for i in self.hoverables:
+            color = constants.COLOR_DEFAULT
+            if i["rect"].collidepoint(self.mousepos):
+                color = constants.COLOR_HOVERED
+
+            t = self.editor.assets.font_render(0, i["text"], color)
+            self.surface.blit(t, i["pos"])
