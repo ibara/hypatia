@@ -9,7 +9,7 @@ __copyright__ = "Copyright 2015 Lillian Lemmer"
 __credits__ = ["Lillian Lemmer"]
 __license__ = "MIT"
 __maintainer__ = __author__
-__site__ = "http://lillian-lemmer.github.io/hypatia/"
+__site__ = "http://hypatia-engine.github.io/"
 __email__ = "lillian.lynn.lemmer@gmail.com"
 __status__ = "Development"
 
@@ -19,6 +19,7 @@ __contributors__ = [
                     "Eric James Michael Ritz",
                     "Brian Houston Morrow",
                     "William D. Jones",
+                    "Alice Jenkinson",
                    ]
 
 __version__ = '0.2.29'

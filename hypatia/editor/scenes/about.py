@@ -1,3 +1,4 @@
+import math
 import pygame
 import pygame.locals
 
@@ -62,9 +63,38 @@ class AboutScene(Scene):
                 (logo_y + self.editor.assets.logotype.get_rect().height + 20))
         self.surface.blit(t, tpos)
 
-        msg = "Brought to you by Lillian Lemmer and %d other contributors"
-        msg = msg % (len(hypatia.__contributors__) - 1)
+        msg = "Brought to you by the following people:"
         t = self.editor.assets.font_render(None, msg, constants.COLOR_DEFAULT)
         tpos = ((self.editor.screen_size[0] / 2) - (t.get_rect().width / 2),
                 (logo_y + self.editor.assets.logotype.get_rect().height + 40))
         self.surface.blit(t, tpos)
+
+        # Now render the list of people
+        surfacesize = (self.editor.screen_size[0] - 10,
+                       self.editor.screen_size[1] - tpos[1] - 20)
+        peoplesurface = pygame.Surface(surfacesize)
+        peoplesurface.fill((255, 255, 255))
+
+        width = surfacesize[0] / 3
+        height = surfacesize[1] / 10
+        x = 0
+        y = 0
+
+        for i, v in enumerate(hypatia.__contributors__):
+            a = self.editor.assets.font_render(0, v, constants.COLOR_DEFAULT)
+            apos = (width * x, height * y)
+
+            x += 1
+            if x >= 3:
+                x = 0
+                y += 1
+
+                if y >= 10:
+                    msg = "...and %d others"
+                    msg = msg % (len(hypatia.__contributors__) - (x * y))
+                    a = self.editor.assets.font_render(0, msg,
+                                                       constants.COLOR_DEFAULT)
+
+            peoplesurface.blit(a, apos)
+
+        self.surface.blit(peoplesurface, (5, tpos[1] + 30))
