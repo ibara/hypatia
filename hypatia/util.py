@@ -48,12 +48,13 @@ class Resource(object):
 
     """
 
-    def __init__(self, resource_category, resource_name):
+    def __init__(self, resource_category, resource_name, prefix=None):
         """Load a resource ZIP using a category and zip name.
 
         Args:
             resource_category (str): E.g., tilesheets, walkabouts.
             resource_name (str): E.g., debug.
+            prefix (str): The path to the game directory to load from.
 
         """
 
@@ -62,6 +63,9 @@ class Resource(object):
                             resource_category,
                             resource_name
                            )
+
+        if prefix:
+            path = os.path.join(prefix, path)
 
         file_handlers = {
                          '.ini': configparser_fromfp,

@@ -348,7 +348,7 @@ class Tilesheet(object):
             raise BadTileID(tile_id)
 
     @classmethod
-    def from_resources(cls, tilesheet_name):
+    def from_resources(cls, tilesheet_name, prefix=None):
         """Create a Tilesheet from a name, corresponding to a path
         pointing to a tilesheet zip archive.
 
@@ -363,12 +363,7 @@ class Tilesheet(object):
         """
 
         # path to the zip containing tilesheet.png and tilesheet.ini
-        resource = util.Resource('tilesheets', tilesheet_name)
-        zip_path = os.path.join(
-                                'resources',
-                                'tilesheets',
-                                tilesheet_name + '.zip'
-                               )
+        resource = util.Resource('tilesheets', tilesheet_name, prefix=prefix)
         tilesheet_surface = pygame.image.load(resource['tilesheet.png'])
         config = resource['tilesheet.ini']
 

@@ -2,6 +2,7 @@ from __future__ import print_function
 import pygame
 import pygame.locals
 
+from hypatia.editor.scenes.tilesheet import TilesheetScene
 from hypatia.editor import constants
 from . import Scene
 
@@ -11,6 +12,8 @@ class ProjectScene(Scene):
         super(ProjectScene, self).__init__(editor)
         self.project_name = projname
         self.click_targets = []
+        self.renderables = []
+        self.hoverables = []
 
         self.in_dialog = False
         self.dialog_text = None
@@ -47,7 +50,7 @@ class ProjectScene(Scene):
 
         self.project = self.editor.projects[found]
 
-        # clear click targets as we reinitialize them in here
+        # clear click targets, etc as we reinitialize them in here
         self.click_targets = []
         self.renderables = []
         self.hoverables = []
@@ -96,7 +99,9 @@ class ProjectScene(Scene):
             })
             self.click_targets.append({
                 "rect": t.get_rect().move(*tpos),
-                "callback": lambda e: print(e),
+                "callback": lambda e: self.editor.push_scene(TilesheetScene, 
+                                                             self.project_name,
+                                                             v)
             })
 
         self.scenes_title = self.editor.assets.font_render(
