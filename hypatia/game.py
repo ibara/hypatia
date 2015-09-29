@@ -45,10 +45,126 @@ from hypatia import constants
 from hypatia import exceptions
 from hypatia import controllers
 
+class Game(object):
+    def __init__(self, vfs):
+        """The base game object. This links all the components together,
+        and is automatically instantiated when Hypatia is loaded with your
+        game.
+
+        Args:
+          vfs (hypatia.vfs.VFS): The game's virtual file system.
+        """
+
+        self.running = True
+        self.vfs = vfs
+
+        # load engine default config, then game config, then user config
+        self.config = configparser.ConfigParser()
+        self.config.readfp(io.BytesIO(constants.DEFAULT_CONFIG))
+        self.config.readfp(self.vfs.open("game.ini"))
+
+        self.stages = []
+
+        pygame.init()
+        self.clock = pygame.time.Clock()
+        self.ms_elapsed = 0
+
+        displayinfo = pygame.display.Info()
+        self.physical_size = (displayinfo.current_w, displayinfo.current_h)
+
+        self.update_screen_size()
+
+    def update_screen_size(self):
+        screen_size = self.config.get('display', 'screen_size')
+        self.screen_size = [int(i) for i in screen_size.split('x')]
+
+        window_size = self.config.get('display', 'window_size')
+        self.window_size = [int(i) for i in window_size.split('x')]
+
+        self.fullscreen = self.config.getboolean('display', 'fullscreen')
+        self.scaleup = self.config.getboolean('display', 'scaleup')
+        self.max_fps = self.config.getint('display', 'maxfps') 
+
+        # set up display itself
+        screenres = self.screen_size
+        flags = DOUBLEBUF
+
+        if self.fullscreen:
+            self.fullscreen = True
+            screenres = self.physical_size
+            flags = FULLSCREEN | DOUBLEBUF
+
+        elif self.scaleup:
+            screenres = self.window_size
+
+        self.screen = pygame.display.set_mode(screenres, flags)
+
+    def update(self):
+        if len(self.stages) > 0:
+            try:
+                self.stages[-1].update()
+
+            except Exception as e:
+                self.stage_jump(ExceptionStage)
+
+            surface = self.stages[-1].surface
+
+        else:
+            surface = pygame.Surface(self.screen_size)
+            surface.fill((51, 51, 51))
+
+        if self.fullscreen:
+            surface = pygame.transform.scale(surface, self.physical_size)
+        elif self.scaleup:
+            surface = pygame.transform.scale(surface, self.window_size)
+
+        self.screen.blit(surface, (0, 0))
+        pygame.display.flip()
+
+        self.ms_elapsed = self.clock.tick(self.max_fps)
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if len(self.stages) > 0:
+                try:
+                    self.stages[-1].handle_event(event)
+
+                except:
+                    self.stage_jump(ExceptionStage)                    
+
+            if event.type == QUIT: 
+                self.running = False 
+
+    def stage_jump(self, cls, *args):
+        for i in self.stages:
+            i.shutdown()
+
+        c = cls(self, *args)
+        c.startup()
+        self.stages = [c]
+
+    def stage_push(self, cls, *args):
+        if len(self.stages) > 0:
+            self.stages[-1].suspend()
+
+        c = cls(self, *args) 
+        c.startup()
+        self.stages.append(c)
+
+    def stage_pop(self):
+        if len(self.stages) > 0:
+            self.stages[-1].shutdown()
+            return self.stages.pop()
+
+    def main_loop(self):
+        while self.running:
+            self.handle_events()
+            self.update()
+
 class Stage(object):
     def __init__(self, parent):
         self.parent = parent
-        self.surface = pygame.Surface(parent.scrn_size)
+        self.surface = pygame.Surface(parent.screen_size)
 
     def startup(self):
         """Perform stage startup.
@@ -103,107 +219,6 @@ class ExceptionStage(Stage):
 
         for i in self.renderables:
             self.surface.blit(*i)
-
-class Game(object):
-    def __init__(self, gameconfig):
-        """The base game object. This links all the components together,
-        and is automatically instantiated when Hypatia is loaded with your
-        game.
-
-        Args:
-          gameconfig (bytes): A bytestring of the game's configuration.
-        """
-
-        self.running = True
-
-        # load engine default config, then game config, then user config
-        self.config = configparser.ConfigParser()
-        self.config.readfp(io.BytesIO(constants.DEFAULT_CONFIG))
-        self.config.readfp(io.BytesIO(gameconfig))
-
-        self.stages = []
-
-        pygame.init()
-        self.clock = pygame.time.Clock()
-        self.ms_elapsed = 0
-
-        displayinfo = pygame.display.Info()
-        self.phys_size = (displayinfo.current_w, displayinfo.current_h)
-        screen_size = self.config.get('display', 'resolution').split("x")
-        self.scrn_size = [int(i) for i in screen_size]
-        self.fullscreen = False
-        self.max_fps = self.config.getint('display', 'maxfps') 
-
-        # set up display itself
-        screenres = self.scrn_size
-        flags = DOUBLEBUF
-
-        if self.config.getboolean('display', 'fullscreen'):
-            self.fullscreen = True
-            screenres = self.screen_size
-            flags = FULLSCREEN | DOUBLEBUF
-
-        self.screen = pygame.display.set_mode(screenres, flags)
-
-    def update(self):
-        if len(self.stages) > 0:
-            try:
-                self.stages[-1].update()
-
-            except Exception as e:
-                self.stage_jump(ExceptionStage)
-
-            surface = self.stages[-1].surface
-
-        else:
-            surface = pygame.Surface(self.scrn_size)
-            surface.fill((51, 51, 51))
-
-        if self.fullscreen:
-            surface = pygame.transform.scale(surface, self.screen_size)
-
-        self.screen.blit(surface, (0, 0))
-        pygame.display.flip()
-
-        self.ms_elapsed = self.clock.tick(self.max_fps)
-
-    def handle_events(self):
-        for event in pygame.event.get():
-            if len(self.stages) > 0:
-                try:
-                    self.stages[-1].handle_event(event)
-
-                except:
-                    self.stage_jump(ExceptionStage)                    
-
-            if event.type == QUIT: 
-                self.running = False 
-
-    def stage_jump(self, cls, *args):
-        for i in self.stages:
-            i.shutdown()
-
-        c = cls(self, *args)
-        c.startup()
-        self.stages = [c]
-
-    def stage_push(self, cls, *args):
-        if len(self.stages) > 0:
-            self.stages[-1].suspend()
-
-        c = cls(self, *args) 
-        c.startup()
-        self.stages.append(c)
-
-    def stage_pop(self):
-        if len(self.stages) > 0:
-            self.stages[-1].shutdown()
-            return self.stages.pop()
-
-    def main_loop(self):
-        while self.running:
-            self.handle_events()
-            self.update()
 
 class Scene(object):
     """A map with configuration data/meta, e.g., NPCs.

@@ -35,7 +35,9 @@ name = Hypatia
 savedirname = hypatia
 
 [display]
-resolution = 800x600
+screen_size = 320x240
+window_size = 800x600
+scaleup = true
 fullscreen = false
 maxfps = 60
 """
