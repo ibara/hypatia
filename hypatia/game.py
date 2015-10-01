@@ -36,6 +36,7 @@ import pygame
 from pygame.locals import *
 
 from hypatia import scene
+from hypatia import constants
 
 class Game(object):
     def __init__(self, vfs):
