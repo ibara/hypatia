@@ -36,6 +36,7 @@ import pygame
 from pygame.locals import *
 
 from hypatia import scene
+from hypatia import render
 from hypatia import constants
 
 class Game(object):
@@ -210,43 +211,56 @@ class ExceptionStage(Stage):
         self.renderables = []
 
         fontstack = "dejavusans,sans"
-        lgfont = pygame.font.SysFont(fontstack, 32)
-        font = pygame.font.SysFont(fontstack, 18)
+        font = pygame.font.SysFont(fontstack, 22)
+        frender = lambda f, t: f.render(t, True, (255, 255, 255))
 
-        excinfo = io.BytesIO()
-        traceback.print_exc(limit=10, file=excinfo)
-        excinfo = excinfo.getvalue().decode('utf-8')
-        print(excinfo)
-
-        date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = "hypatia_log_%s.txt" % date
-        path = os.path.join(os.path.expanduser("~"), filename)
-        with open(path, 'w') as fh:
-            fh.write(excinfo)
-
-        print("The exception information has been written to:")
-        print(path)
-
-        # create renderables
         ypos = 8
 
-        sadface = lgfont.render(":(", True, (255, 255, 255))
-        self.renderables.append((sadface, (8, ypos)))
-        ypos += sadface.get_rect().height + 8
-
-        msg = "An exception has occurred in the current game."
-        t = font.render(msg, True, (255, 255, 255))
+        # the exception info goes here
+        # TODO: make this work for line wrapping, it just overflows currently
+        exctype, excval = sys.exc_info()[:2]
+        t = frender(font, "%s: %s" % (exctype.__name__, excval.message))
         self.renderables.append((t, (8, ypos)))
         ypos += t.get_rect().height + 8
 
-        msg = "The exception information has been saved at:"
-        t = font.render(msg, True, (255, 255, 255))
-        self.renderables.append((t, (8, ypos)))
-        ypos += t.get_rect().height + 8
+        # format the full traceback and put that into a surface that we can
+        # scroll through on the exception info. maybe use Viewport?
+        excinfo = traceback.format_exc()
+        print(excinfo)
 
-        t = font.render(path, True, (255, 255, 255))
-        self.renderables.append((t, (8, ypos)))
-        ypos += t.get_rect().height + 8
+        excsurface = pygame.Surface((self.parent.screen_size[0] - 16, 1000))
+        excypos = 0
+        excinfo = "y\n" * 100 # TODO: This is here to test scrolling, remove
+        for i in excinfo.splitlines()[:-1]:
+            t = frender(font, i)
+            excsurface.blit(t, (0, excypos))
+            excypos += t.get_rect().height + 4
+
+        # save on dat memory by clipping down the generated surface
+        newsize = (self.parent.screen_size[0] - 16, excypos)
+        self.excsurface = pygame.Surface(newsize)
+        self.excsurface.blit(excsurface, (0, 0))
+        del excsurface 
+
+        viewportsize = (self.parent.screen_size[0] - 16,
+                        self.parent.screen_size[1] - ypos - 64)
+
+        self.excviewport = render.Viewport(viewportsize)
+        self.excviewportpos = (8, ypos)
+
+    def handle_event(self, event):
+        if event.type == MOUSEBUTTONDOWN:
+            viewportrect = self.excviewport.rect.move(self.excviewportpos)
+            if viewportrect.collidepoint(event.pos):
+                # event.button: 4 is scrollup, 5 is scrolldown
+
+                if event.button == 4 and self.excviewport.rect.y > 0:
+                    self.excviewport.rect.move_ip(0, -10)
+
+                if event.button == 5:
+                    height = self.excviewport.rect.y + self.excviewport.rect.height
+                    if height < self.excsurface.get_rect().height:
+                        self.excviewport.rect.move_ip(0, 10)
 
     def update(self):
         super(ExceptionStage, self).update()
@@ -254,3 +268,6 @@ class ExceptionStage(Stage):
 
         for i in self.renderables:
             self.surface.blit(*i)
+
+        self.excviewport.blit(self.excsurface)
+        self.surface.blit(self.excviewport.surface, self.excviewportpos)
