@@ -7,14 +7,15 @@ from hypatia import util
 
 
 class State(object):
+    """Defines a game state. This could be a menu, the game interaction
+    itself, or something else.
+
+    Arguments:
+        parent (Game): The game that this State belongs to
+
+    """
+
     def __init__(self, parent):
-        """Defines a game state. This could be a menu, the game interaction
-        itself, or something else.
-
-        Arguments:
-            parent (Game): The game that this State belongs to
-        """
-
         self.parent = parent
         self.surface = pygame.Surface(parent.screen_size)
 
@@ -70,7 +71,9 @@ class ExceptionDisplayState(State):
 
         fontstack = "dejavusans,sans"
         font = pygame.font.SysFont(fontstack, 16)
-        frender = lambda f, t: f.render(t, True, (255, 255, 255))
+
+        def frender(font, text):
+            font.render(text, True, (255, 255, 255))
 
         ypos = 8  # initial padding on the top
 

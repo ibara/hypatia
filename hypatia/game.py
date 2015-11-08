@@ -91,7 +91,7 @@ class Game(object):
 
     def update(self):
         """Updates the display. This calls the current state's
-        :func:`~hypatia.state.State.update` method, and handles any exceptions
+        :meth:`hypatia.state.State.update` method, and handles any exceptions
         that may arise running the update method.
         """
 
@@ -120,7 +120,7 @@ class Game(object):
 
     def handle_events(self):
         """Handle pygame events, passing them down to the current state's
-        :func:`~hypatia.state.State.handle_event()` method.
+        :meth:`hypatia.state.State.handle_event` method.
         """
 
         for event in pygame.event.get():
