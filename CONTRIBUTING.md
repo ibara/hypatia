@@ -135,6 +135,54 @@ The command `git branch --merged` will show all branches merged into `master`.  
 - `git branch -d that-branch` **Note:** `-D` will be necessary for branches merged via `git cherry-pick -s`.
 - `git push origin --delete that-branch`
 
+### Git Tips
+
+Here are some useful Git tips and tricks for developers.
+
+#### Show the Most Commonly Useful Commands
+
+`git help everyday`
+
+#### Show the Most Recent Commit on Branches
+
+`git branch -vv`
+
+This only shows local branches.  Using `-avv` instead will show all branches, local and remote.
+
+#### List Merged Branches
+
+`git checkout master && git branch --merged`
+
+This will show all local branches that we have merged into `master`.  You can use `grep` and `xargs` to delete all such branches like so:
+
+`git branch --merged | grep -v '\*' | xargs -n 1 git branch -d`
+
+#### Reword the Last Commit Message
+
+`git commit -v --amend`
+
+#### Add Files/Changes to the Last Commit
+
+First use `git add` to stage the changes you want to include in the previous commit, then run:
+
+`git commit --amend -C HEAD`
+
+This is also a useful way to immediately fix a bug or problem in the most recent commit.
+
+#### List All Files Git Ignores
+
+`git ls-files --others -i --exclude-standard`
+
+#### See a "Pretty" Graph of All Branches
+
+`git log --all --decorate --oneline --graph`
+
+#### See All Changes Made in the Last Week
+
+`git log --all --since=one.week.ago`
+
+You can also use the `--no-merges` flag if you aren't interested in seeing merge commits.
+
 ## General Documentation Rules
 
   * Always explain what everything is and how it works, to the best of your understanding!
